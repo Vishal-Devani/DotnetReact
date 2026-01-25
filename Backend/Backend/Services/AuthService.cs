@@ -1,5 +1,6 @@
 using Backend.DTOs;
 using Backend.Models;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -27,11 +28,12 @@ public class AuthService : IAuthService
     {
         try
         {
-            // Find user by username or email
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => 
-                    u.Username == loginDto.UsernameOrEmail || 
-                    u.Email == loginDto.UsernameOrEmail);
+            // Find user by username or email using Stored Procedure
+            var users = await _context.Users
+                .FromSqlRaw("EXEC sp_User_GetByUsernameOrEmail @p0", loginDto.UsernameOrEmail)
+                .ToListAsync();
+            
+            var user = users.FirstOrDefault();
 
             if (user == null || !user.IsActive)
             {
@@ -46,9 +48,11 @@ public class AuthService : IAuthService
                 throw new UnauthorizedAccessException("Invalid username/email or password");
             }
 
-            // Update last login
-            user.LastLoginAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
+            // Update last login using Stored Procedure
+            await _context.Database.ExecuteSqlRawAsync(
+                "EXEC sp_User_UpdateLastLogin @p0, @p1", 
+                user.Id, 
+                DateTime.UtcNow);
 
             // Generate tokens
             var token = GenerateJwtToken(user);
@@ -86,34 +90,45 @@ public class AuthService : IAuthService
     {
         try
         {
-            // Check if username already exists
-            if (await _context.Users.AnyAsync(u => u.Username == registerDto.Username))
+            // Hash password
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password, BCrypt.Net.BCrypt.GenerateSalt());
+            var createdAt = DateTime.UtcNow;
+            var isActive = true;
+            var role = "User";
+
+            // Execute Stored Procedure to register user
+            // We use SQL query to get the ID back or error code
+            var result = await _context.Database.SqlQueryRaw<int>(
+                "EXEC sp_User_Register @p0, @p1, @p2, @p3, @p4, @p5",
+                registerDto.Username,
+                registerDto.Email,
+                passwordHash,
+                role,
+                createdAt,
+                isActive
+            ).ToListAsync();
+
+            var newUserId = result.FirstOrDefault();
+
+            if (newUserId == -1)
             {
                 throw new InvalidOperationException("Username already exists");
             }
-
-            // Check if email already exists
-            if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
+            if (newUserId == -2)
             {
                 throw new InvalidOperationException("Email already exists");
             }
 
-            // Hash password
-            var passwordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password, BCrypt.Net.BCrypt.GenerateSalt());
-
-            // Create new user (default role is "User")
+            // Construct user object for token generation (since we have all data)
             var user = new User
             {
+                Id = newUserId,
                 Username = registerDto.Username,
                 Email = registerDto.Email,
-                PasswordHash = passwordHash,
-                Role = "User", // Default role
-                CreatedAt = DateTime.UtcNow,
-                IsActive = true
+                Role = role,
+                CreatedAt = createdAt,
+                IsActive = isActive
             };
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
 
             _logger.LogInformation("New user registered: {Username}, Email: {Email}", user.Username, user.Email);
 
