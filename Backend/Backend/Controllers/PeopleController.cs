@@ -1,12 +1,14 @@
 using Backend.DTOs;
-using Backend.Models;
+using Backend.Exceptions;
+using Backend.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize(Policy = "UserOrAdmin")] // Require authentication for all endpoints
 public class PeopleController : ControllerBase
 {
     // POST /api/people {body}
@@ -14,159 +16,84 @@ public class PeopleController : ControllerBase
     // GET /api/people/2
     // PUT /api/people/2 {body}
     // DELETE /api/people/2 
-    private readonly AppDbContext _context;
+    private readonly IPersonService _personService;
 
-    public PeopleController(AppDbContext context)
+    public PeopleController(IPersonService personService)
     {
-        _context = context;
+        _personService = personService;
     }
 
     [HttpPost]  // POST /api/people
     public async Task<IActionResult> AddPerson([FromBody] CreatePersonDTO createPersonDto)
     {
-        try
+        if (!ModelState.IsValid)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var result = await _context.Database
-                .SqlQuery<PersonDTO>(
-                    $"EXEC sp_CreatePerson @FirstName={createPersonDto.FirstName}, @LastName={createPersonDto.LastName}")
-                .ToListAsync();
-
-            var createdPerson = result.FirstOrDefault();
-            
-            if (createdPerson == null)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to create person");
-            }
-
-            return CreatedAtRoute("GetPerson", new { id = createdPerson.Id }, createdPerson);
+            return BadRequest(ApiResponse<object>.ErrorResponse(
+                "Validation failed", 
+                ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList()));
         }
-        catch (Exception ex)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-        }
+
+        var createdPerson = await _personService.CreatePersonAsync(createPersonDto);
+        return CreatedAtRoute("GetPerson", new { id = createdPerson.Id }, 
+            ApiResponse<PersonDTO>.SuccessResponse(createdPerson, "Person created successfully"));
     }
 
     [HttpGet]  // GET /api/people
     public async Task<IActionResult> GetPeople()
     {
-        try
-        {
-            var people = await _context.Database
-                .SqlQuery<PersonDTO>($"EXEC sp_GetAllPeople")
-                .ToListAsync();
-
-            return Ok(people);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-        }
+        var people = await _personService.GetAllPeopleAsync();
+        return Ok(ApiResponse<IEnumerable<PersonDTO>>.SuccessResponse(people));
     }
 
     [HttpGet("{id:int}", Name = "GetPerson")]  // GET /api/people/1
     public async Task<IActionResult> GetPerson(int id)
     {
-        try
+        var person = await _personService.GetPersonByIdAsync(id);
+
+        if (person == null)
         {
-            var result = await _context.Database
-                .SqlQuery<PersonDTO>(
-                    $"EXEC sp_GetPersonById @Id={id}")
-                .ToListAsync();
-
-            var person = result.FirstOrDefault();
-
-            if (person == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(person);
+            throw new NotFoundException($"Person with Id {id} not found");
         }
-        catch (Exception ex)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-        }
+
+        return Ok(ApiResponse<PersonDTO>.SuccessResponse(person));
     }
 
     [HttpPut("{id:int}")]  // PUT /api/people/1
     public async Task<IActionResult> UpdatePerson(int id, [FromBody] UpdatePersonDTO updatePersonDto)
     {
-        try
+        if (!ModelState.IsValid)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            if (id != updatePersonDto.Id)
-            {
-                return BadRequest("Id in url and body mismatches");
-            }
-
-            // Check if person exists
-            var existingPerson = await _context.Database
-                .SqlQuery<PersonDTO>(
-                    $"EXEC sp_GetPersonById @Id={id}")
-                .ToListAsync();
-
-            if (existingPerson.FirstOrDefault() == null)
-            {
-                return NotFound();
-            }
-
-            // Execute update stored procedure
-            var rowsAffected = await _context.Database.ExecuteSqlAsync(
-                $"EXEC sp_UpdatePerson @Id={updatePersonDto.Id}, @FirstName={updatePersonDto.FirstName}, @LastName={updatePersonDto.LastName}");
-
-            if (rowsAffected == 0)
-            {
-                return NotFound();
-            }
-
-            return NoContent();
+            return BadRequest(ApiResponse<object>.ErrorResponse(
+                "Validation failed", 
+                ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToList()));
         }
-        catch (Exception ex)
+
+        if (id != updatePersonDto.Id)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            return BadRequest(ApiResponse<object>.ErrorResponse("Id in URL and body do not match"));
         }
+
+        var updated = await _personService.UpdatePersonAsync(id, updatePersonDto);
+
+        if (!updated)
+        {
+            throw new NotFoundException($"Person with Id {id} not found");
+        }
+
+        return NoContent();
     }
 
     [HttpDelete("{id:int}")]  // Delete /api/people/1
     public async Task<IActionResult> DeletePerson(int id)
     {
-        try
+        var deleted = await _personService.DeletePersonAsync(id);
+
+        if (!deleted)
         {
-            // Check if person exists
-            var existingPerson = await _context.Database
-                .SqlQuery<PersonDTO>(
-                    $"EXEC sp_GetPersonById @Id={id}")
-                .ToListAsync();
-
-            if (existingPerson.FirstOrDefault() == null)
-            {
-                return NotFound();
-            }
-
-            // Execute delete stored procedure
-            var rowsAffected = await _context.Database.ExecuteSqlAsync(
-                $"EXEC sp_DeletePerson @Id={id}");
-
-            if (rowsAffected == 0)
-            {
-                return NotFound();
-            }
-
-            return NoContent();
+            throw new NotFoundException($"Person with Id {id} not found");
         }
-        catch (Exception ex)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-        }
+
+        return NoContent();
     }
 }
 

@@ -10,4 +10,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Person> People { get; set; }
+    public DbSet<User> Users { get; set; }
+    public DbSet<ApiLog> ApiLogs { get; set; }
+    public DbSet<ErrorLog> ErrorLogs { get; set; }
 }
