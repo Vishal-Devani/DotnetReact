@@ -149,7 +149,7 @@ const Navbar = () => {
                                     >
                                         Login
                                     </NavLink>
-                                    <NavLink
+                                    {/* <NavLink
                                         to='/admin/login'
                                         className={({ isActive }) => `px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105 ${isActive
                                             ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
@@ -157,7 +157,7 @@ const Navbar = () => {
                                             }`}
                                     >
                                         Admin
-                                    </NavLink>
+                                    </NavLink> */}
                                 </>
                             )}
                         </div>
