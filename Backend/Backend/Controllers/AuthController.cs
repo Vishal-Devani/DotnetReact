@@ -114,4 +114,39 @@ public class AuthController : ControllerBase
 
         return Ok(ApiResponse<object?>.SuccessResponse(null, "Token is valid"));
     }
+    [HttpGet("users")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> GetAllUsers()
+    {
+        try
+        {
+            var users = await _authService.GetAllUsersAsync();
+            return Ok(ApiResponse<IEnumerable<UserDTO>>.SuccessResponse(users));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving all users");
+            return StatusCode(500, ApiResponse<object>.ErrorResponse("An error occurred"));
+        }
+    }
+
+    [HttpPatch("users/{id}/status")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> UpdateUserStatus(int id, [FromBody] bool isActive)
+    {
+        try
+        {
+            var success = await _authService.UpdateUserStatusAsync(id, isActive);
+            if (!success)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse("User not found or update failed"));
+            }
+            return Ok(ApiResponse<object>.SuccessResponse(null, "User status updated"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating user status");
+            return StatusCode(500, ApiResponse<object>.ErrorResponse("An error occurred"));
+        }
+    }
 }

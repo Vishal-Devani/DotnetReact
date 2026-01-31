@@ -242,4 +242,27 @@ public class AuthService : IAuthService
         rng.GetBytes(randomNumber);
         return Convert.ToBase64String(randomNumber);
     }
+
+    public async Task<IEnumerable<UserDTO>> GetAllUsersAsync()
+    {
+        return await _context.Database.SqlQueryRaw<UserDTO>("EXEC sp_User_GetAll")
+            .ToListAsync();
+    }
+
+    public async Task<bool> UpdateUserStatusAsync(int userId, bool isActive)
+    {
+        try
+        {
+            await _context.Database.ExecuteSqlRawAsync(
+                "EXEC sp_User_UpdateStatus @p0, @p1", 
+                userId, 
+                isActive);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating user status for UserId: {UserId}", userId);
+            return false;
+        }
+    }
 }

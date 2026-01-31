@@ -35,5 +35,19 @@ export const authService = {
         } catch {
             return false;
         }
+    },
+
+    getAllUsers: async () => {
+        const response = await api.get('/auth/users');
+        return response;
+    },
+
+    updateUserStatus: async (userId, isActive) => {
+        const response = await api.patch(`/auth/users/${userId}/status`, isActive, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        return response;
     }
 };

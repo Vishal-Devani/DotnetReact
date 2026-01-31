@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { personService } from '../services/api';
-import { 
-    Users, 
-    UserPlus, 
-    Shield, 
-    BarChart3, 
+import { authService } from '../services/authService';
+import {
+    Users,
+    UserPlus,
+    Shield,
+    BarChart3,
     Settings,
     TrendingUp,
     Activity
@@ -14,19 +15,41 @@ import {
 
 const AdminDashboard = () => {
     const { user } = useAuth();
+    const [userStats, setUserStats] = useState({ total: 0, active: 0 });
     const [peopleCount, setPeopleCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        loadPeopleCount();
+        loadData();
     }, []);
 
-    const loadPeopleCount = async () => {
+    const loadData = async () => {
         try {
-            const people = await personService.getAll();
-            setPeopleCount(Array.isArray(people) ? people.length : 0);
+            const [people, users] = await Promise.all([
+                personService.getAll(),
+                authService.getAllUsers()
+            ]);
+
+            console.log('Dashboard Data Debug:', { people, users });
+
+            // Helper to extract array from potential response wrapper
+            const getArrayData = (response) => {
+                if (Array.isArray(response)) return response;
+                if (response?.data && Array.isArray(response.data)) return response.data;
+                return [];
+            };
+
+            const peopleData = getArrayData(people);
+            const usersData = getArrayData(users);
+
+            setPeopleCount(peopleData.length);
+
+            setUserStats({
+                total: usersData.length,
+                active: usersData.filter(u => u.isActive).length
+            });
         } catch (error) {
-            console.error('Failed to load people count:', error);
+            console.error('Failed to load dashboard data:', error);
         } finally {
             setLoading(false);
         }
@@ -38,28 +61,32 @@ const AdminDashboard = () => {
             value: loading ? '...' : peopleCount,
             icon: Users,
             color: 'from-blue-500 to-blue-600',
-            bgColor: 'bg-blue-50'
+            bgColor: 'bg-blue-50',
+            link: '/admin/person'
         },
         {
             name: 'Active Users',
-            value: '12',
+            value: loading ? '...' : userStats.active,
             icon: Activity,
             color: 'from-green-500 to-green-600',
-            bgColor: 'bg-green-50'
+            bgColor: 'bg-green-50',
+            link: '/admin/users?status=active'
         },
         {
-            name: 'Admin Access',
-            value: 'Full',
+            name: 'Total Users',
+            value: loading ? '...' : userStats.total,
             icon: Shield,
             color: 'from-purple-500 to-purple-600',
-            bgColor: 'bg-purple-50'
+            bgColor: 'bg-purple-50',
+            link: '/admin/users'
         },
         {
             name: 'System Status',
             value: 'Online',
             icon: TrendingUp,
             color: 'from-pink-500 to-pink-600',
-            bgColor: 'bg-pink-50'
+            bgColor: 'bg-pink-50',
+            link: '#'
         }
     ];
 
@@ -77,9 +104,10 @@ const AdminDashboard = () => {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     {stats.map((stat, index) => (
-                        <div
+                        <Link
                             key={index}
-                            className={`${stat.bgColor} rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow`}
+                            to={stat.link}
+                            className={`block ${stat.bgColor} rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow`}
                         >
                             <div className="flex items-center justify-between">
                                 <div>
@@ -94,7 +122,7 @@ const AdminDashboard = () => {
                                     <stat.icon className="w-6 h-6 text-white" />
                                 </div>
                             </div>
-                        </div>
+                        </Link>
                     ))}
                 </div>
 
@@ -102,18 +130,18 @@ const AdminDashboard = () => {
                 <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
                     <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <button className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <Link to="/admin/person" className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                             <UserPlus className="w-5 h-5 mr-3 text-blue-600" />
                             <span className="font-medium">Add New Person</span>
-                        </button>
+                        </Link>
                         <button className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                             <BarChart3 className="w-5 h-5 mr-3 text-green-600" />
                             <span className="font-medium">View Reports</span>
                         </button>
-                        <button className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <Link to="/admin/settings" className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                             <Settings className="w-5 h-5 mr-3 text-purple-600" />
                             <span className="font-medium">System Settings</span>
-                        </button>
+                        </Link>
                     </div>
                 </div>
 
@@ -121,7 +149,7 @@ const AdminDashboard = () => {
                 <div className="bg-white rounded-xl shadow-lg p-6">
                     <h2 className="text-xl font-semibold text-gray-900 mb-4">Person Management</h2>
                     <p className="text-gray-600 mb-4">Use the Person menu item to manage people records.</p>
-                    <Link 
+                    <Link
                         to="/admin/person"
                         className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >

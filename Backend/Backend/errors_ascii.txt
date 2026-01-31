@@ -1,0 +1,29 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+D:\My-Project\DotnetReact\Backend\Backend\Controllers\AuthController.cs(198,19): warning CS8618: Non-nullable property 'Token' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable. [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+D:\My-Project\DotnetReact\Backend\Backend\Controllers\AuthController.cs(199,19): warning CS8618: Non-nullable property 'RefreshToken' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable. [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+D:\My-Project\DotnetReact\Backend\Backend\Controllers\AuthController.cs(84,16): error CS0246: The type or namespace name 'SecurityTokenException' could not be found (are you missing a using directive or an assembly reference?) [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+D:\My-Project\DotnetReact\Backend\Backend\Controllers\AuthController.cs(91,65): error CS1503: Argument 1: cannot convert from 'string[]' to 'string' [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+D:\My-Project\DotnetReact\Backend\Backend\Controllers\AuthController.cs(91,99): error CS1503: Argument 2: cannot convert from 'string' to 'System.Collections.Generic.List<string>?' [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+D:\My-Project\DotnetReact\Backend\Backend\Middleware\GlobalExceptionHandlerMiddleware.cs(153,32): warning CS8601: Possible null reference assignment. [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+D:\My-Project\DotnetReact\Backend\Backend\Controllers\AuthController.cs(105,71): error CS1503: Argument 1: cannot convert from 'string[]' to 'string' [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+D:\My-Project\DotnetReact\Backend\Backend\Controllers\AuthController.cs(114,65): error CS1503: Argument 1: cannot convert from 'string[]' to 'string' [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+D:\My-Project\DotnetReact\Backend\Backend\Controllers\AuthController.cs(109,59): warning CS8625: Cannot convert null literal to non-nullable reference type. [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+D:\My-Project\DotnetReact\Backend\Backend\Controllers\AuthController.cs(186,59): warning CS8625: Cannot convert null literal to non-nullable reference type. [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+
+Build FAILED.
+
+D:\My-Project\DotnetReact\Backend\Backend\Controllers\AuthController.cs(198,19): warning CS8618: Non-nullable property 'Token' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable. [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+D:\My-Project\DotnetReact\Backend\Backend\Controllers\AuthController.cs(199,19): warning CS8618: Non-nullable property 'RefreshToken' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable. [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+D:\My-Project\DotnetReact\Backend\Backend\Middleware\GlobalExceptionHandlerMiddleware.cs(153,32): warning CS8601: Possible null reference assignment. [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+D:\My-Project\DotnetReact\Backend\Backend\Controllers\AuthController.cs(109,59): warning CS8625: Cannot convert null literal to non-nullable reference type. [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+D:\My-Project\DotnetReact\Backend\Backend\Controllers\AuthController.cs(186,59): warning CS8625: Cannot convert null literal to non-nullable reference type. [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+D:\My-Project\DotnetReact\Backend\Backend\Controllers\AuthController.cs(84,16): error CS0246: The type or namespace name 'SecurityTokenException' could not be found (are you missing a using directive or an assembly reference?) [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+D:\My-Project\DotnetReact\Backend\Backend\Controllers\AuthController.cs(91,65): error CS1503: Argument 1: cannot convert from 'string[]' to 'string' [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+D:\My-Project\DotnetReact\Backend\Backend\Controllers\AuthController.cs(91,99): error CS1503: Argument 2: cannot convert from 'string' to 'System.Collections.Generic.List<string>?' [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+D:\My-Project\DotnetReact\Backend\Backend\Controllers\AuthController.cs(105,71): error CS1503: Argument 1: cannot convert from 'string[]' to 'string' [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+D:\My-Project\DotnetReact\Backend\Backend\Controllers\AuthController.cs(114,65): error CS1503: Argument 1: cannot convert from 'string[]' to 'string' [D:\My-Project\DotnetReact\Backend\Backend\Backend.csproj]
+    5 Warning(s)
+    5 Error(s)
+
+Time Elapsed 00:00:05.37
